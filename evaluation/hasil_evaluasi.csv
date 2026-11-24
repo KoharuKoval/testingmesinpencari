@@ -1,0 +1,11 @@
+Query,Jumlah_Relevan,TFIDF_Precision@5,TFIDF_Recall@5,TFIDF_F1@5,TFIDF_MAP@5,TFIDF_MRR,TFIDF_Latency_ms,BM25_Precision@5,BM25_Recall@5,BM25_F1@5,BM25_MAP@5,BM25_MRR,BM25_Latency_ms
+cara mengatur gaji bulanan,23,1.0,0.2174,0.3571,1.0,1.0,0.153,1.0,0.2174,0.3571,1.0,1.0,0.062
+tips menabung dana darurat,48,1.0,0.1042,0.1887,1.0,1.0,0.244,1.0,0.1042,0.1887,1.0,1.0,0.208
+investasi reksadana untuk pemula,11,1.0,0.4545,0.625,1.0,1.0,0.133,1.0,0.4545,0.625,1.0,1.0,0.101
+cara melunasi utang dan cicilan,50,0.8,0.08,0.1455,0.71,1.0,0.075,0.6,0.06,0.1091,0.55,1.0,0.049
+investasi saham untuk pemula,30,1.0,0.1667,0.2857,1.0,1.0,0.093,1.0,0.1667,0.2857,1.0,1.0,0.08
+tips hemat pengeluaran harian,24,1.0,0.2083,0.3448,1.0,1.0,0.044,1.0,0.2083,0.3448,1.0,1.0,0.02
+investasi emas jangka panjang,28,1.0,0.1786,0.303,1.0,1.0,0.108,1.0,0.1786,0.303,1.0,1.0,0.088
+cara menabung untuk beli rumah,39,1.0,0.1282,0.2273,1.0,1.0,0.142,1.0,0.1282,0.2273,1.0,1.0,0.124
+manfaat asuransi kesehatan dan jiwa,44,1.0,0.1136,0.2041,1.0,1.0,0.11,1.0,0.1136,0.2041,1.0,1.0,0.09
+persiapan dana pensiun dini,43,1.0,0.1163,0.2083,1.0,1.0,0.099,1.0,0.1163,0.2083,1.0,1.0,0.071
