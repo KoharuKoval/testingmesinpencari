@@ -1,0 +1,186 @@
+:root {
+  color-scheme: light;
+
+  /* Permukaan */
+  --bg: #F7F8FA;
+  --surface: #FFFFFF;
+  --surface-sunken: #F1F3F6;
+  --border: #E4E7EC;
+  --border-strong: #CBD1DB;
+
+  /* Teks */
+  --text: #101828;
+  --text-muted: #5B6676;
+  --text-on-primary: #FFFFFF;
+
+  /* Aksi utama (hijau-teal, kesan finansial yang tenang) */
+  --primary: #0E7C66;
+  --primary-hover: #0B6553;
+  --primary-soft: #E3F4EF;
+
+  /* Identitas algoritma, tetap konsisten di seluruh UI */
+  --algo-a: #4F46E5;          /* TF-IDF (VSM) */
+  --algo-a-soft: #EEF0FF;
+  --algo-a-header-bg: rgba(79, 70, 229, 0.08);
+  --algo-b: #B45309;          /* Okapi BM25 */
+  --algo-b-soft: #FEF3C7;
+  --algo-b-header-bg: rgba(180, 83, 9, 0.08);
+
+  /* Status */
+  --success: #15803D;
+  --warning: #B45309;
+  --danger: #B42318;
+  --danger-soft: rgba(180, 35, 24, 0.08);
+
+  /* Penanda kata kunci */
+  --highlight-bg: #FEF9C3;
+  --highlight-text: #422006;
+
+  /* Overlay modal */
+  --overlay-bg: rgba(0, 0, 0, 0.5);
+
+  /* Fokus keyboard */
+  --focus-ring: 0 0 0 3px rgba(14, 124, 102, 0.35);
+
+  /* Bentuk (radius bertingkat, bukan satu nilai untuk semua) */
+  --radius-chip: 999px;
+  --radius-control: 10px;
+  --radius-card: 14px;
+  --radius-modal: 18px;
+  --radius-inline: 3px;
+
+  /* Spasi, kelipatan 4px */
+  --space-1: 4px;  --space-2: 8px;   --space-3: 12px;
+  --space-4: 16px; --space-5: 24px;  --space-6: 32px;
+  --space-7: 48px; --space-8: 72px;
+  --mark-pad-x: 2px;
+
+  /* Tipografi */
+  --font-ui: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
+  --fs-xs: 0.75rem;       /* 12 */
+  --fs-mono-sm: 0.8125rem;/* 13 */
+  --fs-sm: 0.875rem;      /* 14 */
+  --fs-md: 1rem;          /* 16 */
+  --fs-lg: 1.25rem;       /* 20 */
+  --fs-xl: 1.75rem;       /* 28 */
+  --fs-2xl: 2.5rem;       /* 40 */
+
+  /* Lebar konten */
+  --content-max: 1200px;
+  --reading-max: 68ch;
+  --modal-max: 760px;
+  --modal-max-h: 85vh;
+  --tooltip-max-w: 260px;
+
+  /* Ukuran komponen, garis & ilustrasi */
+  --border-w: 1px;
+  --stroke-thin: 1.5px;
+  --stripe-w: 3px;
+  --header-h: 56px;
+  --search-h: 56px;
+  --touch-min: 44px;
+  --icon-md: 20px;
+  --icon-sm: 16px;
+  --icon-xs: 12px;
+  --bar-h: 6px;
+  --step-icon-box: 40px;
+  --connector-w: 32px;
+  --connector-h: 24px;
+  --hero-illus-w: 360px;
+  --hero-illus-h: 220px;
+  --empty-illus-w: 160px;
+  --empty-illus-h: 110px;
+  --bento-motif-w: 64px;
+  --bento-motif-h: 36px;
+  --skeleton-title-h: 20px;
+  --skeleton-line-h: 14px;
+  --skeleton-meta-h: 12px;
+
+  /* Gerak */
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+  --dur-fast: 120ms;
+  --dur-base: 200ms;
+  --dur-pulse: 1400ms;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --bg: #0B0F14;
+  --surface: #131A22;
+  --surface-sunken: #0F151C;
+  --border: #243040;
+  --border-strong: #33445A;
+
+  --text: #E6EAF0;
+  --text-muted: #98A2B3;
+  --text-on-primary: #04130F;
+
+  --primary: #34D1AE;
+  --primary-hover: #5BE0C2;
+  --primary-soft: rgba(52, 209, 174, 0.14);
+
+  --algo-a: #A5B4FC;
+  --algo-a-soft: rgba(129, 140, 248, 0.16);
+  --algo-a-header-bg: rgba(165, 180, 252, 0.09);
+  --algo-b: #FBBF24;
+  --algo-b-soft: rgba(251, 191, 36, 0.14);
+  --algo-b-header-bg: rgba(251, 191, 36, 0.09);
+
+  --success: #4ADE80;
+  --warning: #FBBF24;
+  --danger: #F97066;
+  --danger-soft: rgba(249, 112, 102, 0.12);
+
+  --highlight-bg: rgba(250, 204, 21, 0.18);
+  --highlight-text: #FEF9C3;
+
+  --focus-ring: 0 0 0 3px rgba(52, 209, 174, 0.45);
+}
+
+/* Tema awal mengikuti sistem bila pengguna belum memilih */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+
+    --bg: #0B0F14;
+    --surface: #131A22;
+    --surface-sunken: #0F151C;
+    --border: #243040;
+    --border-strong: #33445A;
+
+    --text: #E6EAF0;
+    --text-muted: #98A2B3;
+    --text-on-primary: #04130F;
+
+    --primary: #34D1AE;
+    --primary-hover: #5BE0C2;
+    --primary-soft: rgba(52, 209, 174, 0.14);
+
+    --algo-a: #A5B4FC;
+    --algo-a-soft: rgba(129, 140, 248, 0.16);
+    --algo-a-header-bg: rgba(165, 180, 252, 0.09);
+    --algo-b: #FBBF24;
+    --algo-b-soft: rgba(251, 191, 36, 0.14);
+    --algo-b-header-bg: rgba(251, 191, 36, 0.09);
+
+    --success: #4ADE80;
+    --warning: #FBBF24;
+    --danger: #F97066;
+    --danger-soft: rgba(249, 112, 102, 0.12);
+
+    --highlight-bg: rgba(250, 204, 21, 0.18);
+    --highlight-text: #FEF9C3;
+
+    --focus-ring: 0 0 0 3px rgba(52, 209, 174, 0.45);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

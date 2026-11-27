@@ -3,79 +3,465 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FinEduSearch — Mesin Pencari Edukasi & Tips Finansial Pemula</title>
+    <title>FinEduSearch — Mesin Pencari Edukasi &amp; Tips Finansial Pemula</title>
+    <script>
+        (function () {
+            try {
+                var saved = localStorage.getItem("finedu-theme");
+                if (saved === "light" || saved === "dark") {
+                    document.documentElement.setAttribute("data-theme", saved);
+                    return;
+                }
+            } catch (e) {}
+            if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) {
+                document.documentElement.setAttribute("data-theme", "dark");
+            } else {
+                document.documentElement.setAttribute("data-theme", "light");
+            }
+        })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='tokens.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <header class="hero">
-        <div class="container">
-            <div class="badge">Project UAS Pemrosesan Informasi • Korpus Bahasa Indonesia</div>
-            <h1>FinEdu<span>Search</span></h1>
-            <p class="subtitle">Mesin Pencari Edukasi & Tips Finansial Pemula dengan Komparasi Algoritma <strong>TF-IDF (VSM)</strong> vs <strong>Okapi BM25</strong></p>
+    <header class="fe-header">
+        <div class="fe-container fe-header-inner">
+            <a href="/" id="logoHomeLink" class="fe-logo" aria-label="Beranda FinEduSearch">
+                <svg class="fe-logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                    <circle cx="11" cy="11" r="7"></circle>
+                    <path d="M21 21l-4.35-4.35"></path>
+                    <path d="M11 8v6"></path>
+                    <path d="M8 11h6"></path>
+                </svg>
+                <span class="fe-logo-text">FinEduSearch</span>
+            </a>
 
-            <div class="stats-bar">
-                <div class="stat-pill"><strong>{{ stats.total_docs }}</strong> Dokumen Terindeks</div>
-                <div class="stat-pill"><strong>{{ stats.total_terms }}</strong> Term Unik (Inverted Index)</div>
-                <div class="stat-pill"><strong>{{ stats.avg_doc_len }}</strong> Rata-rata Token/Dokumen</div>
-            </div>
-
-            <form id="searchForm" class="search-box">
-                <input type="text" id="queryInput" placeholder="Cari topik finansial (misal: cara mengatur gaji bulanan, dana darurat, reksadana)..." required>
-                <button type="submit">Cari & Bandingkan</button>
-            </form>
-
-            <div class="quick-chips">
-                <span>Coba kueri demo:</span>
-                <button type="button" class="chip" data-q="cara mengatur gaji bulanan">Mengatur Gaji Bulanan</button>
-                <button type="button" class="chip" data-q="tips menabung dana darurat">Dana Darurat</button>
-                <button type="button" class="chip" data-q="investasi reksadana untuk pemula">Reksadana Pemula</button>
-                <button type="button" class="chip" data-q="cara melunasi utang dan cicilan">Lunasi Utang</button>
-                <button type="button" class="chip" data-q="investasi saham untuk pemula">Saham Pemula</button>
-            </div>
+            <button type="button" id="themeToggle" class="fe-theme-btn" aria-label="Ganti ke mode gelap" aria-pressed="false">
+                <svg class="fe-theme-icon fe-icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                </svg>
+                <svg class="fe-theme-icon fe-icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                    <circle cx="12" cy="12" r="4"></circle>
+                    <path d="M12 2v2"></path>
+                    <path d="M12 20v2"></path>
+                    <path d="m4.93 4.93 1.41 1.41"></path>
+                    <path d="m17.66 17.66 1.41 1.41"></path>
+                    <path d="M2 12h2"></path>
+                    <path d="M20 12h2"></path>
+                    <path d="m6.34 17.66-1.41 1.41"></path>
+                    <path d="m19.07 4.93-1.41 1.41"></path>
+                </svg>
+            </button>
         </div>
     </header>
 
-    <main class="container">
-        <div id="loadingState" class="loading hidden">Memproses kueri & menghitung skor relevansi...</div>
+    <main id="mainApp" class="fe-main" data-state="idle">
+        <section class="fe-hero" aria-labelledby="heroTitle">
+            <div class="fe-container">
+                <div class="fe-hero-top">
+                    <div class="fe-hero-copy">
+                        <h1 id="heroTitle" class="fe-hero-title">Cari tips finansial, lihat dua algoritma bekerja.</h1>
+                        <p class="fe-hero-desc">Bandingkan hasil TF-IDF dan BM25 untuk kueri yang sama.</p>
+                    </div>
 
-        <section id="metaPanel" class="meta-panel hidden">
-            <div><strong>Token Hasil Preprocessing (Sastrawi):</strong> <span id="tokenList"></span></div>
-            <div><strong>Irisan Top-10 Kedua Algoritma:</strong> <span id="overlapBadge" class="overlap-badge"></span></div>
+                    <div class="fe-hero-illus" aria-hidden="true">
+                        <svg class="fe-hero-svg" viewBox="0 0 360 220" fill="none" aria-hidden="true" focusable="false">
+                            <!-- Kapsul kueri di kiri -->
+                            <rect x="8" y="96" width="64" height="28" rx="14" fill="var(--surface-sunken)" stroke="var(--border-strong)" stroke-width="1.5"></rect>
+                            <circle cx="24" cy="110" r="4" fill="var(--primary)"></circle>
+                            <line x1="34" y1="110" x2="58" y2="110" stroke="var(--text-muted)" stroke-width="1.5" stroke-linecap="round"></line>
+
+                            <!-- Jalur bercabang dari kueri ke dua tumpukan peringkat -->
+                            <path d="M72 110 C112 110 116 54 156 54" stroke="var(--algo-a)" stroke-width="1.5" stroke-linecap="round"></path>
+                            <path d="M72 110 C112 110 116 166 156 166" stroke="var(--algo-b)" stroke-width="1.5" stroke-linecap="round"></path>
+
+                            <!-- Tumpukan atas: dokumen TF-IDF (--algo-a) -->
+                            <rect x="164" y="20" width="94" height="10" rx="5" fill="var(--algo-a)"></rect>
+                            <rect x="164" y="38" width="76" height="10" rx="5" fill="var(--algo-a)" opacity="0.8"></rect>
+                            <rect x="164" y="56" width="86" height="10" rx="5" fill="var(--algo-a)" opacity="0.6"></rect>
+                            <rect x="164" y="74" width="64" height="10" rx="5" fill="var(--algo-a)" opacity="0.4"></rect>
+
+                            <!-- Tumpukan bawah: dokumen BM25 (--algo-b) -->
+                            <rect x="164" y="136" width="88" height="10" rx="5" fill="var(--algo-b)"></rect>
+                            <rect x="164" y="154" width="96" height="10" rx="5" fill="var(--algo-b)" opacity="0.8"></rect>
+                            <rect x="164" y="172" width="70" height="10" rx="5" fill="var(--algo-b)" opacity="0.6"></rect>
+                            <rect x="164" y="190" width="60" height="10" rx="5" fill="var(--algo-b)" opacity="0.4"></rect>
+
+                            <!-- Garis putus-putus penghubung dokumen yang sama (--primary) -->
+                            <path d="M258 25 C312 25 312 159 260 159" stroke="var(--primary)" stroke-width="1.5" stroke-dasharray="4 4" stroke-linecap="round"></path>
+                            <path d="M250 61 C292 61 292 141 252 141" stroke="var(--primary)" stroke-width="1.5" stroke-dasharray="4 4" stroke-linecap="round"></path>
+                            <circle cx="258" cy="25" r="2.5" fill="var(--primary)"></circle>
+                            <circle cx="260" cy="159" r="2.5" fill="var(--primary)"></circle>
+                            <circle cx="250" cy="61" r="2.5" fill="var(--primary)"></circle>
+                            <circle cx="252" cy="141" r="2.5" fill="var(--primary)"></circle>
+                        </svg>
+                    </div>
+                </div>
+
+                <form id="searchForm" class="fe-search-bar" novalidate>
+                    <span class="fe-search-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                            <circle cx="11" cy="11" r="7"></circle>
+                            <path d="M21 21l-4.35-4.35"></path>
+                        </svg>
+                    </span>
+                    <label for="queryInput" class="fe-sr-only">Kueri pencarian</label>
+                    <input
+                        type="search"
+                        id="queryInput"
+                        class="fe-search-input"
+                        placeholder="Cari, misalnya: cara menabung untuk pemula"
+                        autocomplete="off"
+                        required
+                    >
+                    <button type="button" id="clearSearchBtn" class="fe-clear-btn hidden" aria-label="Bersihkan pencarian">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                            <path d="M18 6 6 18"></path>
+                            <path d="m6 6 12 12"></path>
+                        </svg>
+                    </button>
+                    <button type="submit" id="searchSubmitBtn" class="fe-search-submit">
+                        <span class="fe-btn-spinner hidden" aria-hidden="true"></span>
+                        <span class="fe-btn-label">Cari</span>
+                    </button>
+                </form>
+                <p id="searchHint" class="fe-search-hint hidden" role="status" aria-live="polite"></p>
+
+                <div class="fe-chips-row fe-hero-chips" aria-label="Kueri contoh">
+                    <span class="fe-chips-label">Contoh kueri:</span>
+                    <button type="button" class="fe-chip chip" data-q="cara mengatur gaji bulanan">Mengatur gaji bulanan</button>
+                    <button type="button" class="fe-chip chip" data-q="tips menabung dana darurat">Dana darurat</button>
+                    <button type="button" class="fe-chip chip" data-q="investasi reksadana untuk pemula">Reksadana pemula</button>
+                    <button type="button" class="fe-chip chip" data-q="cara melunasi utang dan cicilan">Lunasi utang</button>
+                    <button type="button" class="fe-chip chip" data-q="investasi saham untuk pemula">Saham pemula</button>
+                </div>
+            </div>
         </section>
 
-        <section id="comparisonGrid" class="comparison-grid hidden">
-            <div class="algo-column">
-                <div class="algo-header tfidf-header">
-                    <div>
-                        <h2>Vector Space Model (TF-IDF)</h2>
-                        <small>Cosine Similarity Weighting</small>
+        <section class="fe-bento-section" aria-labelledby="statsHeading">
+            <div class="fe-container">
+                <h2 id="statsHeading" class="fe-sr-only">Statistik korpus</h2>
+                <div class="fe-bento-grid">
+                    <div class="fe-bento-card fe-bento-num">
+                        <div class="fe-bento-content">
+                            <div class="fe-bento-value" data-num="{{ stats.total_docs }}" data-decimals="0">{{ stats.total_docs }}</div>
+                            <div class="fe-bento-label">Dokumen terindeks</div>
+                        </div>
+                        <svg class="fe-bento-motif" viewBox="0 0 64 36" fill="none" aria-hidden="true" focusable="false">
+                            <rect x="10" y="14" width="10" height="18" rx="2" stroke="var(--border-strong)" stroke-width="1.5"></rect>
+                            <rect x="26" y="8" width="10" height="24" rx="2" stroke="var(--primary)" stroke-width="1.5"></rect>
+                            <rect x="42" y="4" width="10" height="28" rx="2" stroke="var(--border-strong)" stroke-width="1.5"></rect>
+                        </svg>
                     </div>
-                    <span id="tfidfTime" class="time-badge">0 ms</span>
+                    <div class="fe-bento-card fe-bento-num">
+                        <div class="fe-bento-content">
+                            <div class="fe-bento-value" data-num="{{ stats.total_terms }}" data-decimals="0">{{ "{:,}".format(stats.total_terms).replace(",", ".") }}</div>
+                            <div class="fe-bento-label">Term unik di inverted index</div>
+                        </div>
+                        <svg class="fe-bento-motif" viewBox="0 0 64 36" fill="none" aria-hidden="true" focusable="false">
+                            <circle cx="14" cy="10" r="2.5" stroke="var(--border-strong)" stroke-width="1.5"></circle>
+                            <circle cx="28" cy="10" r="2.5" stroke="var(--primary)" stroke-width="1.5"></circle>
+                            <circle cx="42" cy="10" r="2.5" stroke="var(--border-strong)" stroke-width="1.5"></circle>
+                            <circle cx="21" cy="24" r="2.5" stroke="var(--primary)" stroke-width="1.5"></circle>
+                            <circle cx="35" cy="24" r="2.5" stroke="var(--border-strong)" stroke-width="1.5"></circle>
+                            <circle cx="49" cy="24" r="2.5" stroke="var(--border-strong)" stroke-width="1.5"></circle>
+                        </svg>
+                    </div>
+                    <div class="fe-bento-card fe-bento-num">
+                        <div class="fe-bento-content">
+                            <div class="fe-bento-value" data-num="{{ stats.avg_doc_len }}" data-decimals="1">{{ stats.avg_doc_len | string | replace(".", ",") }}</div>
+                            <div class="fe-bento-label">Rata-rata token per dokumen</div>
+                        </div>
+                        <svg class="fe-bento-motif" viewBox="0 0 64 36" fill="none" aria-hidden="true" focusable="false">
+                            <path d="M6 26 L18 18 L30 22 L42 10 L56 14" stroke="var(--primary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                            <circle cx="42" cy="10" r="2.5" fill="var(--surface)" stroke="var(--primary)" stroke-width="1.5"></circle>
+                            <line x1="6" y1="30" x2="58" y2="30" stroke="var(--border-strong)" stroke-width="1.5" stroke-linecap="round"></line>
+                        </svg>
+                    </div>
+                    <div class="fe-bento-card fe-bento-sources">
+                        <div class="fe-bento-source-head">
+                            <span class="fe-bento-value" data-num="3" data-decimals="0">3</span>
+                            <span class="fe-bento-label">media</span>
+                        </div>
+                        <ul class="fe-source-bars" aria-label="Distribusi dokumen per sumber">
+                            <li class="fe-source-bar-item">
+                                <span class="fe-source-name">Antara</span>
+                                <span class="fe-source-track" aria-hidden="true">
+                                    <span class="fe-source-fill fe-source-fill-antara"></span>
+                                </span>
+                                <span class="fe-source-count" data-num="162" data-decimals="0">162</span>
+                            </li>
+                            <li class="fe-source-bar-item">
+                                <span class="fe-source-name">Detik</span>
+                                <span class="fe-source-track" aria-hidden="true">
+                                    <span class="fe-source-fill fe-source-fill-detik"></span>
+                                </span>
+                                <span class="fe-source-count" data-num="146" data-decimals="0">146</span>
+                            </li>
+                            <li class="fe-source-bar-item">
+                                <span class="fe-source-name">Kompas</span>
+                                <span class="fe-source-track" aria-hidden="true">
+                                    <span class="fe-source-fill fe-source-fill-kompas"></span>
+                                </span>
+                                <span class="fe-source-count" data-num="12" data-decimals="0">12</span>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
-                <div id="tfidfResults" class="results-list"></div>
             </div>
+        </section>
 
-            <div class="algo-column">
-                <div class="algo-header bm25-header">
-                    <div>
-                        <h2>Okapi BM25</h2>
-                        <small>Probabilistic Ranking (k1=1.5, b=0.75)</small>
+        <section id="initialGuide" class="fe-guide-section" aria-labelledby="guideHeading">
+            <div class="fe-container">
+                <h2 id="guideHeading" class="fe-sr-only">Cara kerja pencarian</h2>
+                <ol class="fe-guide-steps">
+                    <li class="fe-guide-card">
+                        <span class="fe-guide-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                                <circle cx="11" cy="11" r="6"></circle>
+                                <path d="m20 20-4.2-4.2"></path>
+                            </svg>
+                        </span>
+                        <div class="fe-guide-body">
+                            <h3 class="fe-guide-title">Kueri</h3>
+                            <p class="fe-guide-desc">Ketik topik finansial yang ingin dicari.</p>
+                        </div>
+                    </li>
+                    <li class="fe-guide-connector" aria-hidden="true">
+                        <svg class="fe-connector-h" viewBox="0 0 32 16" fill="none" aria-hidden="true" focusable="false">
+                            <line x1="2" y1="8" x2="26" y2="8" stroke="var(--border-strong)" stroke-width="1.5" stroke-linecap="round"></line>
+                            <path d="m22 4 5 4-5 4" stroke="var(--border-strong)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                        </svg>
+                        <svg class="fe-connector-v" viewBox="0 0 16 24" fill="none" aria-hidden="true" focusable="false">
+                            <line x1="8" y1="2" x2="8" y2="19" stroke="var(--border-strong)" stroke-width="1.5" stroke-linecap="round"></line>
+                            <path d="m4 15 4 5 4-5" stroke="var(--border-strong)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                        </svg>
+                    </li>
+                    <li class="fe-guide-card">
+                        <span class="fe-guide-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                                <path d="M4 6h16"></path>
+                                <path d="M7 12h10"></path>
+                                <path d="M10 18h4"></path>
+                            </svg>
+                        </span>
+                        <div class="fe-guide-body">
+                            <h3 class="fe-guide-title">Token Sastrawi</h3>
+                            <p class="fe-guide-desc">Kata dasar dipilih, stopword dibuang otomatis.</p>
+                        </div>
+                    </li>
+                    <li class="fe-guide-connector" aria-hidden="true">
+                        <svg class="fe-connector-h" viewBox="0 0 32 16" fill="none" aria-hidden="true" focusable="false">
+                            <line x1="2" y1="8" x2="26" y2="8" stroke="var(--border-strong)" stroke-width="1.5" stroke-linecap="round"></line>
+                            <path d="m22 4 5 4-5 4" stroke="var(--border-strong)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                        </svg>
+                        <svg class="fe-connector-v" viewBox="0 0 16 24" fill="none" aria-hidden="true" focusable="false">
+                            <line x1="8" y1="2" x2="8" y2="19" stroke="var(--border-strong)" stroke-width="1.5" stroke-linecap="round"></line>
+                            <path d="m4 15 4 5 4-5" stroke="var(--border-strong)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                        </svg>
+                    </li>
+                    <li class="fe-guide-card">
+                        <span class="fe-guide-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                                <rect x="3" y="4" width="7" height="16" rx="2"></rect>
+                                <rect x="14" y="4" width="7" height="16" rx="2"></rect>
+                            </svg>
+                        </span>
+                        <div class="fe-guide-body">
+                            <h3 class="fe-guide-title">Dua peringkat</h3>
+                            <p class="fe-guide-desc">Hasil TF-IDF dan BM25 tampil berdampingan.</p>
+                        </div>
+                    </li>
+                </ol>
+            </div>
+        </section>
+
+        <section id="resultsRegion" class="fe-results-section" aria-labelledby="resultsHeading" aria-live="polite">
+            <div class="fe-container">
+                <h2 id="resultsHeading" class="fe-sr-only">Hasil pencarian dan perbandingan</h2>
+
+                <div id="loadingState" class="fe-skeleton-grid" aria-label="Memuat hasil pencarian">
+                    <div class="fe-skeleton-col">
+                        <div class="fe-skeleton-header"></div>
+                        <div class="fe-skeleton-card">
+                            <div class="fe-skeleton-line fe-skeleton-meta"></div>
+                            <div class="fe-skeleton-line fe-skeleton-title"></div>
+                            <div class="fe-skeleton-line"></div>
+                            <div class="fe-skeleton-line fe-skeleton-short"></div>
+                        </div>
+                        <div class="fe-skeleton-card">
+                            <div class="fe-skeleton-line fe-skeleton-meta"></div>
+                            <div class="fe-skeleton-line fe-skeleton-title"></div>
+                            <div class="fe-skeleton-line"></div>
+                            <div class="fe-skeleton-line fe-skeleton-short"></div>
+                        </div>
+                        <div class="fe-skeleton-card">
+                            <div class="fe-skeleton-line fe-skeleton-meta"></div>
+                            <div class="fe-skeleton-line fe-skeleton-title"></div>
+                            <div class="fe-skeleton-line"></div>
+                            <div class="fe-skeleton-line fe-skeleton-short"></div>
+                        </div>
                     </div>
-                    <span id="bm25Time" class="time-badge">0 ms</span>
+                    <div class="fe-skeleton-col">
+                        <div class="fe-skeleton-header"></div>
+                        <div class="fe-skeleton-card">
+                            <div class="fe-skeleton-line fe-skeleton-meta"></div>
+                            <div class="fe-skeleton-line fe-skeleton-title"></div>
+                            <div class="fe-skeleton-line"></div>
+                            <div class="fe-skeleton-line fe-skeleton-short"></div>
+                        </div>
+                        <div class="fe-skeleton-card">
+                            <div class="fe-skeleton-line fe-skeleton-meta"></div>
+                            <div class="fe-skeleton-line fe-skeleton-title"></div>
+                            <div class="fe-skeleton-line"></div>
+                            <div class="fe-skeleton-line fe-skeleton-short"></div>
+                        </div>
+                        <div class="fe-skeleton-card">
+                            <div class="fe-skeleton-line fe-skeleton-meta"></div>
+                            <div class="fe-skeleton-line fe-skeleton-title"></div>
+                            <div class="fe-skeleton-line"></div>
+                            <div class="fe-skeleton-line fe-skeleton-short"></div>
+                        </div>
+                    </div>
                 </div>
-                <div id="bm25Results" class="results-list"></div>
+
+                <div id="errorState" class="fe-state-box fe-error-box" role="alert">
+                    <p id="errorMessage" class="fe-state-text">Server tidak merespons. Periksa apakah <code>python app.py</code> masih berjalan.</p>
+                    <button type="button" id="retrySearchBtn" class="fe-retry-btn">Coba lagi</button>
+                </div>
+
+                <div id="emptyState" class="fe-state-box fe-empty-box">
+                    <svg class="fe-empty-illus" viewBox="0 0 160 110" fill="none" aria-hidden="true" focusable="false">
+                        <rect x="16" y="20" width="96" height="14" rx="4" stroke="var(--border-strong)" stroke-width="1.5" stroke-dasharray="4 4"></rect>
+                        <rect x="16" y="44" width="112" height="14" rx="4" stroke="var(--border-strong)" stroke-width="1.5" stroke-dasharray="4 4"></rect>
+                        <rect x="16" y="68" width="84" height="14" rx="4" stroke="var(--border-strong)" stroke-width="1.5" stroke-dasharray="4 4"></rect>
+                        <circle cx="110" cy="48" r="22" fill="var(--surface)" stroke="var(--primary)" stroke-width="1.5"></circle>
+                        <circle cx="110" cy="48" r="14" stroke="var(--text-muted)" stroke-width="1.5" stroke-dasharray="3 3"></circle>
+                        <line x1="126" y1="64" x2="144" y2="82" stroke="var(--primary)" stroke-width="1.5" stroke-linecap="round"></line>
+                    </svg>
+                    <p class="fe-state-text">Tidak ada artikel yang cocok dengan kueri ini.</p>
+                    <div id="emptySuggestions" class="fe-chips-row">
+                        <span class="fe-chips-label">Coba kueri lain:</span>
+                        <button type="button" class="fe-chip chip" data-q="cara mengatur gaji bulanan">Mengatur gaji bulanan</button>
+                        <button type="button" class="fe-chip chip" data-q="tips menabung dana darurat">Dana darurat</button>
+                        <button type="button" class="fe-chip chip" data-q="investasi reksadana untuk pemula">Reksadana pemula</button>
+                    </div>
+                </div>
+
+                <section id="metaPanel" class="fe-meta-panel" aria-label="Ringkasan kueri dan irisan hasil">
+                    <div class="fe-meta-tokens">
+                        <span class="fe-meta-label">Token setelah Sastrawi</span>
+                        <div id="tokenList" class="fe-token-list"></div>
+                    </div>
+                    <div class="fe-meta-overlap">
+                        <div class="fe-overlap-head">
+                            <span class="fe-meta-label">Hasil yang sama di kedua algoritma</span>
+                            <span id="overlapBadge" class="fe-overlap-text">0 dari 10</span>
+                        </div>
+                        <div class="fe-overlap-bar" aria-hidden="true">
+                            <div id="overlapFill" class="fe-overlap-fill"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <div id="resultsPanelHead" class="fe-results-panel-head">
+                    <h3 id="resultsPanelTitle" class="fe-results-panel-title" tabindex="-1">Perbandingan hasil peringkat</h3>
+                    <p class="fe-scale-note">Skor tiap algoritma beda skala. Yang dibandingkan adalah urutannya.</p>
+                </div>
+
+                <div id="comparisonWrap" class="fe-comparison-wrap" data-active-algo="tfidf">
+                    <div id="algoTabs" class="fe-algo-tabs" role="tablist" aria-label="Pilih hasil algoritma">
+                        <button type="button" id="tabTfidf" class="fe-algo-tab fe-algo-tab-a is-active" role="tab" aria-selected="true" aria-controls="comparisonGrid" data-algo="tfidf">
+                            <svg class="fe-algo-icon" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" focusable="false">
+                                <path d="M8 2.5 14.2 13.5H1.8L8 2.5Z"></path>
+                            </svg>
+                            <span>TF-IDF (VSM)</span>
+                            <span id="tabTfidfCount" class="fe-tab-count">0</span>
+                        </button>
+                        <button type="button" id="tabBm25" class="fe-algo-tab fe-algo-tab-b" role="tab" aria-selected="false" aria-controls="comparisonGrid" data-algo="bm25">
+                            <svg class="fe-algo-icon" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" focusable="false">
+                                <circle cx="8" cy="8" r="5.5"></circle>
+                            </svg>
+                            <span>Okapi BM25</span>
+                            <span id="tabBm25Count" class="fe-tab-count">0</span>
+                        </button>
+                    </div>
+
+                    <div id="algoHeaders" class="fe-algo-headers">
+                        <div class="fe-algo-header fe-algo-header-a" data-algo="tfidf">
+                            <div class="fe-algo-title-wrap">
+                                <h3 class="fe-algo-title">
+                                    <svg class="fe-algo-icon" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" focusable="false">
+                                        <path d="M8 2.5 14.2 13.5H1.8L8 2.5Z"></path>
+                                    </svg>
+                                    <span>TF-IDF (VSM)</span>
+                                </h3>
+                                <p class="fe-algo-sub">Cosine Similarity</p>
+                            </div>
+                            <div class="fe-algo-stats">
+                                <span id="tfidfTime" class="fe-latency-badge">0 ms</span>
+                                <span id="tfidfCount" class="fe-count-text">0 hasil</span>
+                            </div>
+                        </div>
+
+                        <div class="fe-algo-header fe-algo-header-b" data-algo="bm25">
+                            <div class="fe-algo-title-wrap">
+                                <h3 class="fe-algo-title">
+                                    <svg class="fe-algo-icon" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" focusable="false">
+                                        <circle cx="8" cy="8" r="5.5"></circle>
+                                    </svg>
+                                    <span>Okapi BM25</span>
+                                </h3>
+                                <p class="fe-algo-sub">k1 = 1,5 · b = 0,75</p>
+                            </div>
+                            <div class="fe-algo-stats">
+                                <span id="bm25Time" class="fe-latency-badge">0 ms</span>
+                                <span id="bm25Count" class="fe-count-text">0 hasil</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="comparisonGrid" class="fe-comparison-grid" aria-label="Perbandingan hasil pencarian"></div>
+                </div>
             </div>
         </section>
     </main>
 
-    <div id="articleModal" class="modal hidden">
-        <div class="modal-content">
-            <button id="closeModal" class="close-btn">&times;</button>
-            <span id="modalSource" class="source-tag"></span>
-            <h3 id="modalTitle"></h3>
-            <p id="modalDate" class="modal-date"></p>
-            <div id="modalBody" class="modal-body"></div>
-            <a id="modalLink" href="#" target="_blank" rel="noopener" class="original-link">Buka Artikel Asli &rarr;</a>
+    <footer class="fe-footer">
+        <div class="fe-container fe-footer-inner">
+            <div class="fe-footer-main">
+                <div class="fe-footer-meta">
+                    <span class="fe-footer-name">FinEduSearch</span>
+                    <span class="fe-footer-note">Dibuat untuk UAS Penelusuran Informasi</span>
+                </div>
+                <p class="fe-footer-stats" aria-label="Ringkasan statistik korpus">
+                    <span class="fe-footer-num" data-num="{{ stats.total_docs }}" data-decimals="0">{{ stats.total_docs }}</span> dokumen ·
+                    <span class="fe-footer-num" data-num="{{ stats.total_terms }}" data-decimals="0">{{ "{:,}".format(stats.total_terms).replace(",", ".") }}</span> term ·
+                    <span class="fe-footer-num" data-num="{{ stats.avg_doc_len }}" data-decimals="1">{{ stats.avg_doc_len | string | replace(".", ",") }}</span> token/dok ·
+                    <span id="footerMediaCount" class="fe-footer-num" data-num="3" data-decimals="0">3</span> media
+                </p>
+            </div>
+            <a href="https://github.com/KoharuKoval/testingmesinpencari" target="_blank" rel="noopener noreferrer" class="fe-footer-link">GitHub</a>
+        </div>
+    </footer>
+
+    <div id="articleModal" class="fe-modal hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <div class="fe-modal-panel" tabindex="-1">
+            <div class="fe-modal-header">
+                <div class="fe-modal-meta">
+                    <span id="modalSource" class="fe-source-badge"></span>
+                    <span id="modalDate" class="fe-modal-date"></span>
+                </div>
+                <button type="button" id="closeModal" class="fe-modal-close" aria-label="Tutup">Tutup</button>
+            </div>
+            <h3 id="modalTitle" class="fe-modal-title"></h3>
+            <div id="modalBody" class="fe-modal-body"></div>
+            <div class="fe-modal-footer">
+                <a id="modalLink" href="#" target="_blank" rel="noopener noreferrer" class="fe-modal-link">Buka sumber asli</a>
+            </div>
         </div>
     </div>
 
